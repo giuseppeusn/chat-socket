@@ -1,4 +1,4 @@
-# Chat simultâneo - socket
+# Chat socket
 
 ## Projeto
 
