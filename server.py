@@ -39,6 +39,15 @@ def broadcast_msg(msg, addr):
       user['conn'].sendall(str.encode(msg))
 
 
+def disconnect_user(conn, addr):
+  global users
+
+  dc_user = next((u for u in users if u['addr'] == addr), None)
+  broadcast_msg(f"----------- 🌐 {bcolors.WARNING}{dc_user['username']} ({dc_user['addr'][0]}:{dc_user['addr'][1]}) desconectou do chat ----------- {bcolors.ENDC}", addr)
+  users.remove(dc_user)
+
+  conn.close()
+
 def handle_auth(conn, addr):
   authenticated = False
   global chat_pass
@@ -75,6 +84,10 @@ def receive_msg(conn, addr):
     try:
       data = conn.recv(1024)
 
+      if not data:
+        disconnect_user(conn, addr)
+        break 
+
       username, message = data.decode().split(": ", 1)
 
       user = next((u for u in users if u['username'] == username.strip()), None)
@@ -87,9 +100,7 @@ def receive_msg(conn, addr):
 
     except Exception as e:
       if e.errno == 10054:
-        dc_user = next((u for u in users if u['addr'] == addr), None)
-        broadcast_msg(f"----------- 🌐 {bcolors.WARNING}{dc_user['username']} ({dc_user['addr'][0]}:{dc_user['addr'][1]}) desconectou do chat ----------- {bcolors.ENDC}", addr)
-        users.remove(dc_user)
+        disconnect_user(conn, addr)
         break
 
       print(f"{bcolors.FAIL}❌ Erro: {e}{bcolors.ENDC}")

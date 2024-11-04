@@ -65,8 +65,7 @@ def start_client():
       text = input(f"{bcolors.OKCYAN}")
 
       if text == "/q":
-        print(f"{bcolors.WARNING}----------- 🌐 Você saiu do chat -----------{bcolors.ENDC}")
-        break
+        raise KeyboardInterrupt
 
       sock.sendall(str.encode(f"{user}: {text}"))
 
