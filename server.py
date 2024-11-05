@@ -1,6 +1,7 @@
 import socket as s
 import threading
 import sys
+import time
 from colors import bcolors, ucolors
 
 HOST = '127.0.0.1'
@@ -59,14 +60,22 @@ def disconnect_user(conn, addr):
 
 def handle_auth(conn, addr):
   authenticated = False
+  valid_user = False
   global chat_pass
 
   try:
-    username = conn.recv(1024).decode()
+    while not valid_user:
+      username = conn.recv(1024).decode()
 
-    if username == "":
-      return False
+      exists = next((u for u in users if u['username'].lower() == username.lower()), None)
 
+      if exists or username == "":
+        conn.sendall(str.encode("invalid"))
+      else:
+        conn.sendall(str.encode("valid"))
+        valid_user = True
+
+    time.sleep(0.1)
     if chat_pass == "":
       conn.sendall(str.encode("false"))
     else:
@@ -143,6 +152,7 @@ def start_server():
     while True:
       conn, addr = sock.accept()
       connect_user(conn, addr)
+
   except Exception as e:
     print(f"{bcolors.FAIL}❌ Erro: {e}{bcolors.ENDC}")
     sys.exit(0)

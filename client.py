@@ -12,11 +12,20 @@ authenticated = False
 def handle_auth(sock):
   global authenticated
   global user
+  valid_user = False
 
   try:
-    user = input(f"{bcolors.WHITE}🙂 Digite seu usuário: ")
-    sock.sendall(str.encode(user))
+    while not valid_user:
+      user = input(f"{bcolors.WHITE}🙂 Digite seu usuário: ")
+      sock.sendall(str.encode(user))
 
+      data = sock.recv(1024).decode()
+
+      if data == "valid":
+        valid_user = True
+      else:
+        print(f"{bcolors.FAIL}❌ Usuário já existe ou é inválido. Tente outro.{bcolors.ENDC}")
+    
     has_password = sock.recv(1024).decode()
 
     if has_password == "true":
@@ -47,7 +56,8 @@ def listen_server(sock):
     try:
       data = sock.recv(1024)
       print(data.decode())
-    except Exception:
+    except Exception as e:
+      print(e)
       break
 
 def start_client():
