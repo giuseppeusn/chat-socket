@@ -64,10 +64,18 @@ def start_client():
 
       text = input(f"{bcolors.OKCYAN}")
 
-      if text == "/q":
-        raise KeyboardInterrupt
+      if text.startswith("/"):
+        if text == "/q":
+          raise KeyboardInterrupt
 
-      sock.sendall(str.encode(f"{user}: {text}"))
+        try:
+          pvd_user, message = text.split(" ", 1)
+
+          sock.sendall(str.encode(f"{user}: {pvd_user}-{message}"))
+        except:
+          print(f"{bcolors.FAIL}❌ Comando inválido.{bcolors.ENDC}")
+      else:
+        sock.sendall(str.encode(f"{user}: {text}"))
 
   except KeyboardInterrupt:
     print(f"{bcolors.WARNING}----------- 🌐 Você saiu do chat -----------{bcolors.ENDC}")

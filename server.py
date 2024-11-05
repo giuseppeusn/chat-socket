@@ -38,6 +38,15 @@ def broadcast_msg(msg, addr):
     if user['addr'] != addr:
       user['conn'].sendall(str.encode(msg))
 
+def unicast_msg(msg, usu, conn):
+  global users
+
+  user = next((u for u in users if u['username'].lower() == usu), None)
+
+  if user and user['conn'] != conn:
+    user['conn'].sendall(str.encode(msg))
+  else:
+    conn.sendall(str.encode(f"{bcolors.FAIL}❌ Usuário não encontrado.{bcolors.ENDC}"))
 
 def disconnect_user(conn, addr):
   global users
@@ -92,7 +101,12 @@ def receive_msg(conn, addr):
 
       user = next((u for u in users if u['username'] == username.strip()), None)
 
-      broadcast_msg(f"💬 {user['color']}{user['username']}: {ucolors.LIGHTWHITE}{message}{bcolors.ENDC}{bcolors.OKCYAN}", addr)
+      if message.startswith("/"):
+        usu, message = message.split("-", 1)
+        format_usu = usu.replace("/", "").lower()
+        unicast_msg(f"💬 {bcolors.HEADER}{username} -> Você: {ucolors.LIGHTWHITE}{message}{bcolors.ENDC}{bcolors.OKCYAN}", format_usu, conn)
+      else:
+        broadcast_msg(f"💬 {user['color']}{user['username']}: {ucolors.LIGHTWHITE}{message}{bcolors.ENDC}{bcolors.OKCYAN}", addr)
 
     except ValueError as e:
       print(f"🔊 {bcolors.FAIL}Mensagem inválida.{bcolors.ENDC}")
@@ -119,15 +133,19 @@ def start_server():
   global chat_pass
   chat_pass = input("🔒 Defina uma senha de acesso: ")
 
-  sock = s.socket(s.AF_INET, s.SOCK_STREAM)
-  sock.bind((HOST, PORT))
-  sock.listen()
+  try: 
+    sock = s.socket(s.AF_INET, s.SOCK_STREAM)
+    sock.bind((HOST, PORT))
+    sock.listen()
 
-  print(f"{bcolors.OKGREEN}----------- 🌐 Servidor iniciado ({HOST}:{PORT}) -----------{bcolors.ENDC}")
+    print(f"{bcolors.OKGREEN}----------- 🌐 Servidor iniciado ({HOST}:{PORT}) -----------{bcolors.ENDC}")
 
-  while True:
-    conn, addr = sock.accept()
-    connect_user(conn, addr)
+    while True:
+      conn, addr = sock.accept()
+      connect_user(conn, addr)
+  except Exception as e:
+    print(f"{bcolors.FAIL}❌ Erro: {e}{bcolors.ENDC}")
+    sys.exit(0)
 
 if __name__ == "__main__":
   try:
